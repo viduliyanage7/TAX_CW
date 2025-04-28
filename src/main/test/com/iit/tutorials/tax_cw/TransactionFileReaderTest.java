@@ -12,4 +12,18 @@ class TransactionFileReaderTest {
         int expectedvalue = 4;
         assertEquals(expectedvalue, TransactionFileReader.calculateChecksum(test));
     }
+
+    @Test
+    void calculateChecksumSpecialCharacters() {
+        String test = "test#$$";
+        boolean hasSpecialChar = TransactionFileReader.calculateChecksum(test) != 0;
+        assertTrue(hasSpecialChar);
+    }
+
+    @Test
+    void calculateChecksumNumbers() {
+        String test = "test123";
+        int expectedvalue = 7;
+        assertEquals(expectedvalue, TransactionFileReader.calculateChecksum(test));
+    }
 }

@@ -11,7 +11,7 @@ public class MainApplication extends Application {
     public void start(Stage stage) throws Exception {
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/com/iit/tutorials/tax_cw/login.fxml"));
         Scene scene = new Scene(fxmlLoader.load());
-        stage.setTitle("Login Page");
+        stage.setTitle("TAX System");
         stage.setScene(scene);
         stage.show();
     }

@@ -139,9 +139,22 @@ public class HomeController {
         internalPriceColumn.setCellFactory(column -> {
             TextFieldTableCell<TaxDataRecord, Double> cell = new TextFieldTableCell<>(new DoubleStringConverter()) {
                 @Override
+                public void startEdit() {
+                    super.startEdit();
+                    if (getGraphic() instanceof TextField textField) {
+                        textField.setTextFormatter(new TextFormatter<>(change -> {
+                            String newText = change.getControlNewText();
+                            if (newText.matches("-?\\d*(\\.\\d*)?")) {
+                                return change;
+                            }
+                            return null;
+                        }));
+                    }
+                }
+
+                @Override
                 public void updateItem(Double item, boolean empty) {
                     super.updateItem(item, empty);
-
                     if (empty || item == null) {
                         setText(null);
                         setStyle("");
@@ -157,14 +170,28 @@ public class HomeController {
             };
             return cell;
         });
+
         internalPriceColumn.setOnEditCommit(event -> handleEditCommit(event, "internalPrice"));
 
         salesPriceColumn.setCellFactory(column -> {
             TextFieldTableCell<TaxDataRecord, Double> cell = new TextFieldTableCell<>(new DoubleStringConverter()) {
                 @Override
+                public void startEdit() {
+                    super.startEdit();
+                    if (getGraphic() instanceof TextField textField) {
+                        textField.setTextFormatter(new TextFormatter<>(change -> {
+                            String newText = change.getControlNewText();
+                            if (newText.matches("-?\\d*(\\.\\d*)?")) {
+                                return change;
+                            }
+                            return null;
+                        }));
+                    }
+                }
+
+                @Override
                 public void updateItem(Double item, boolean empty) {
                     super.updateItem(item, empty);
-
                     if (empty || item == null) {
                         setText(null);
                         setStyle("");
@@ -180,10 +207,79 @@ public class HomeController {
             };
             return cell;
         });
+
         salesPriceColumn.setOnEditCommit(event -> handleEditCommit(event, "salesPrice"));
-        discountColumn.setCellFactory(TextFieldTableCell.forTableColumn(new DoubleStringConverter()));
+        discountColumn.setCellFactory(column -> {
+            TextFieldTableCell<TaxDataRecord, Double> cell = new TextFieldTableCell<>(new DoubleStringConverter()) {
+                @Override
+                public void startEdit() {
+                    super.startEdit();
+                    if (getGraphic() instanceof TextField textField) {
+                        textField.setTextFormatter(new TextFormatter<>(change -> {
+                            String newText = change.getControlNewText();
+                            if (newText.matches("-?\\d*(\\.\\d*)?")) {
+                                return change;
+                            }
+                            return null;
+                        }));
+                    }
+                }
+
+                @Override
+                public void updateItem(Double item, boolean empty) {
+                    super.updateItem(item, empty);
+                    if (empty || item == null) {
+                        setText(null);
+                        setStyle("");
+                    } else {
+                        setText(String.valueOf(item));
+                        if (item < 0) {
+                            setStyle("-fx-background-color: lightcoral; -fx-text-fill: white;");
+                        } else {
+                            setStyle("");
+                        }
+                    }
+                }
+            };
+            return cell;
+        });
+
         discountColumn.setOnEditCommit(event -> handleEditCommit(event, "discount"));
-        qtyColumn.setCellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter()));
+        qtyColumn.setCellFactory(column -> {
+            TextFieldTableCell<TaxDataRecord, Integer> cell = new TextFieldTableCell<>(new IntegerStringConverter()) {
+                @Override
+                public void startEdit() {
+                    super.startEdit();
+                    if (getGraphic() instanceof TextField textField) {
+                        textField.setTextFormatter(new TextFormatter<>(change -> {
+                            String newText = change.getControlNewText();
+                            if (newText.matches("\\d*")) {
+                                return change;
+                            }
+                            return null;
+                        }));
+                    }
+                }
+
+                @Override
+                public void updateItem(Integer item, boolean empty) {
+                    super.updateItem(item, empty);
+                    if (empty || item == null) {
+                        setText(null);
+                        setStyle("");
+                    } else {
+                        setText(String.valueOf(item));
+                        if (item < 0) {
+                            setStyle("-fx-background-color: lightcoral; -fx-text-fill: white;");
+                        } else {
+                            setStyle("");
+                        }
+                    }
+                }
+            };
+            return cell;
+        });
+
         qtyColumn.setOnEditCommit(event -> handleEditCommit(event, "quantity"));
 
         updateTotalProfit();
@@ -192,37 +288,37 @@ public class HomeController {
     private void handleEditCommit(TableColumn.CellEditEvent<TaxDataRecord, ?> event, String fieldName) {
         TaxDataRecord record = event.getRowValue();
 
-        switch (fieldName) {
-            case "itemCode":
-                record.setItemCode((String) event.getNewValue());
-                break;
-            case "discount":
-                record.setDiscount((Double) event.getNewValue());
-                break;
-            case "salesPrice":
-                record.setSalesPrice((Double) event.getNewValue());
-                break;
-            case "internalPrice":
-                record.setInternalPrice((Double) event.getNewValue());
-                break;
-            case "quantity":
-                record.setQuantity((Integer) event.getNewValue());
-                break;
-            default:
-                System.out.println("Unknown field: " + fieldName);
+        if ("False".equalsIgnoreCase(record.getValid())) {
+            switch (fieldName) {
+                case "itemCode":
+                    record.setItemCode((String) event.getNewValue());
+                    break;
+                case "discount":
+                    record.setDiscount((Double) event.getNewValue());
+                    break;
+                case "salesPrice":
+                    record.setSalesPrice((Double) event.getNewValue());
+                    break;
+                case "internalPrice":
+                    record.setInternalPrice((Double) event.getNewValue());
+                    break;
+                case "quantity":
+                    record.setQuantity((Integer) event.getNewValue());
+                    break;
+                default:
+                    System.out.println("Unknown field: " + fieldName);
+            }
+
+            record.recalculateProfit();
+            record.validateChecksum(tableView.getItems());
+            updateTotalProfit();
+            updateSummaryLabels();
+            tableView.refresh();
+        } else {
+            tableView.refresh();
+            showAlert("Editing Not Allowed", "Only invalid records can be edited.");
         }
-
-
-        record.recalculateProfit();
-        record.validateChecksum(tableView.getItems());
-        updateTotalProfit();
-        updateSummaryLabels();
-        tableView.refresh();
-
     }
-
-
-
 
     @FXML
     private void onOpenFileClick() {

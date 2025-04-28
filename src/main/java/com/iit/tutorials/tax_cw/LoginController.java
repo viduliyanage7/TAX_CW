@@ -23,8 +23,6 @@ public class LoginController {
 
                 HomeController dashboardController = loader.getController();
 
-
-
             } catch (IOException e) {
                 e.printStackTrace();
             }
